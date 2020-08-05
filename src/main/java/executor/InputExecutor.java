@@ -32,44 +32,50 @@ public class InputExecutor {
 	public InputExecutor(SparkSession sparkSession) {
 		this.sparkSession = sparkSession;
 	}
-	
+
 	/**
 	 * Find the X-largest values in data
 	 *
-	 * @param limit value
+	 * @param limit  value
 	 * @param system input stream
 	 */
-	public void execute(int limit, InputStream inputStream) throws IOException {
+	public List<String> execute(int limit, InputStream inputStream) throws IOException {
+		long start = System.currentTimeMillis();
 		List<Row> rows = new ArrayList<>();
-		try (BufferedReader bufReader = new BufferedReader(new InputStreamReader(inputStream))){
+		try (BufferedReader bufReader = new BufferedReader(new InputStreamReader(inputStream))) {
 			String inputStr = null;
 			while ((inputStr = bufReader.readLine()) != null) {
 				rows.add(parseLine(inputStr));
 			}
 		}
 		Dataset<Row> df = sparkSession.createDataFrame(rows, createAndGetSchema());
-		findTheLargetValues(limit, df);
+		List<String> records = findTheLargetValues(limit, df);
+		System.out.println("elasped time:" + (System.currentTimeMillis() - start));
+		return records;
 	}
-	
+
 	/**
 	 * Find the X-largest values in data
 	 *
-	 * @param the largest value count
+	 * @param the      largest value count
 	 * @param absolute file path
 	 */
-	public void execute(int limit, String filePath) {
-		Dataset<Row> df = sparkSession.read().textFile(filePath)
-				.map((MapFunction<String, Row>) line -> parseLine(line), RowEncoder.apply(createAndGetSchema()));
-		findTheLargetValues(limit, df);
+	public List<String> execute(int limit, String filePath) {
+		long start = System.currentTimeMillis();
+		Dataset<Row> df = sparkSession.read().textFile(filePath).map((MapFunction<String, Row>) line -> parseLine(line),
+				RowEncoder.apply(createAndGetSchema()));
+		List<String> records = findTheLargetValues(limit, df);
+		System.out.println("[read data] elasped time:" + (System.currentTimeMillis() - start));
+		return records;
 	}
-	
+
 	/**
 	 * Parse line and transform to structure
 	 *
 	 * @param the largest value count
 	 * @return Row structure
 	 */
-	private Row parseLine(String line) {
+	public Row parseLine(String line) {
 		String[] parts = line.split("\\s+");
 		return RowFactory.create((parts[0]), Double.parseDouble(parts[1]));
 	}
@@ -77,21 +83,23 @@ public class InputExecutor {
 	/**
 	 * Find the largest values
 	 *
-	 * @param the largest value count
+	 * @param the       largest value count
 	 * @param dataframe
 	 * 
 	 */
-	private void findTheLargetValues(int limit, Dataset<Row> df) {
-		List<String> list = df.select(df.col("uid")).orderBy(df.col("value").desc()).limit(limit).as(Encoders.STRING())
-				.collectAsList();
-		for (String s : list) {
-			System.out.println(s);
-		}
+	public List<String> findTheLargetValues(int limit, Dataset<Row> df) {
+		return df.select(df.col("uid")).orderBy(df.col("value").desc()).limit(limit)
+				.as(Encoders.STRING()).collectAsList();
 	}
 
-	private StructType createAndGetSchema() {
-		return new StructType(
-				new StructField[] { new StructField("uid", DataTypes.StringType, false, Metadata.empty()),
-						new StructField("value", DataTypes.DoubleType, false, Metadata.empty()) });
+	/**
+	 * Create data schema
+	 *
+	 * @param data schema
+	 * 
+	 */
+	public StructType createAndGetSchema() {
+		return new StructType(new StructField[] { new StructField("uid", DataTypes.StringType, false, Metadata.empty()),
+				new StructField("value", DataTypes.DoubleType, false, Metadata.empty()) });
 	}
 }

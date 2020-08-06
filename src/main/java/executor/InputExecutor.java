@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +26,9 @@ import org.apache.spark.sql.types.StructType;
  * @author chienchang.huang
  * 
  */
-public class InputExecutor {
+public class InputExecutor implements Serializable {
+	
+	private static final long serialVersionUID = 1L;
 
 	private SparkSession sparkSession;
 
@@ -41,6 +44,8 @@ public class InputExecutor {
 	 */
 	public List<String> execute(int limit, InputStream inputStream) throws IOException {
 		long start = System.currentTimeMillis();
+		// TODO: if streaming input was over a server limitation, we can save data into S3 or HDFS storage without keeping in memory 
+		//       and use cluster mode to process it.   
 		List<Row> rows = new ArrayList<>();
 		try (BufferedReader bufReader = new BufferedReader(new InputStreamReader(inputStream))) {
 			String inputStr = null;
@@ -49,23 +54,23 @@ public class InputExecutor {
 			}
 		}
 		Dataset<Row> df = sparkSession.createDataFrame(rows, createAndGetSchema());
-		List<String> records = findTheLargetValues(limit, df);
-		System.out.println("elasped time:" + (System.currentTimeMillis() - start));
+		List<String> records = findTheLargestValues(limit, df);
+		System.out.println("elasped time:" + ((System.currentTimeMillis() - start)/ 1000) % 60 + " seconds");
 		return records;
 	}
 
 	/**
 	 * Find the X-largest values in data
 	 *
-	 * @param the      largest value count
+	 * @param the largest value count
 	 * @param absolute file path
 	 */
 	public List<String> execute(int limit, String filePath) {
 		long start = System.currentTimeMillis();
 		Dataset<Row> df = sparkSession.read().textFile(filePath).map((MapFunction<String, Row>) line -> parseLine(line),
 				RowEncoder.apply(createAndGetSchema()));
-		List<String> records = findTheLargetValues(limit, df);
-		System.out.println("[read data] elasped time:" + (System.currentTimeMillis() - start));
+		List<String> records = findTheLargestValues(limit, df);
+		System.out.println("elasped time:" + ((System.currentTimeMillis() - start)/ 1000) % 60 + " seconds");
 		return records;
 	}
 
@@ -83,11 +88,11 @@ public class InputExecutor {
 	/**
 	 * Find the largest values
 	 *
-	 * @param the       largest value count
+	 * @param the largest value count
 	 * @param dataframe
 	 * 
 	 */
-	public List<String> findTheLargetValues(int limit, Dataset<Row> df) {
+	public List<String> findTheLargestValues(int limit, Dataset<Row> df) {
 		return df.select(df.col("uid")).orderBy(df.col("value").desc()).limit(limit)
 				.as(Encoders.STRING()).collectAsList();
 	}

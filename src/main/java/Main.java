@@ -17,16 +17,25 @@ public class Main {
 
 			InputExecutor executor = new InputExecutor(sparkSession);
 			List<String> records;
+			int limit = Integer.valueOf(args[0]);
+			
 			if (args.length == 2) {
-				records = executor.execute(Integer.valueOf(args[0]), args[1]);
-			} else {
-				records = executor.execute(Integer.valueOf(args[0]), System.in);
+				records = executor.execute(limit, args[1]);
+			} else if(args.length == 1) {
+				records = executor.execute(limit, System.in);
+			}else {
+				 throw new Exception("Only allow at most 2 arguments");
 			}
+			
 			for (String record : records) {
 				System.out.println(record);
 			}
-		} catch (Exception e) {
+			
+		} catch(NumberFormatException ne) {
+			System.out.println("The first argument is the largest values count, it only accept numeric input.");
+		}catch (Exception e) {
 			e.printStackTrace();
+			System.exit(1);
 		}
 	}
 

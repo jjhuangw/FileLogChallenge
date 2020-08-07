@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.Dataset;
@@ -55,7 +56,8 @@ public class InputExecutor implements Serializable {
 		}
 		Dataset<Row> df = sparkSession.createDataFrame(rows, createAndGetSchema());
 		List<String> records = findTheLargestValues(limit, df);
-		System.out.println("elasped time:" + ((System.currentTimeMillis() - start)/ 1000) % 60 + " seconds");
+		long elaspedTime = (System.currentTimeMillis() - start);
+		System.out.println("elasped time:" + TimeUnit.MILLISECONDS.toSeconds(elaspedTime) + " seconds, " + elaspedTime + " milliseconds");
 		return records;
 	}
 
@@ -70,7 +72,8 @@ public class InputExecutor implements Serializable {
 		Dataset<Row> df = sparkSession.read().textFile(filePath).map((MapFunction<String, Row>) line -> parseLine(line),
 				RowEncoder.apply(createAndGetSchema()));
 		List<String> records = findTheLargestValues(limit, df);
-		System.out.println("elasped time:" + ((System.currentTimeMillis() - start)/ 1000) % 60 + " seconds");
+		long elaspedTime = (System.currentTimeMillis() - start);
+		System.out.println("elasped time:" + TimeUnit.MILLISECONDS.toSeconds(elaspedTime) + " seconds, " + elaspedTime + " milliseconds");
 		return records;
 	}
 

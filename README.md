@@ -26,19 +26,40 @@ For example, given the input data above and X=3, the following would be valid ou
 - **Build jar package** - Please install java8/maven on your local before start
 
 ```
+# goto the project
+cd find-largest-value
+# build project
 mvn clean package
+# will generate the jar file in target folder
+ll target/
 ```
 - **Run application** - Read content from stdin
 
 ```
-# java -jar target/find-large-value-jar-with-dependencies.jar $largest_value_count file_streaming_input
-java -jar target/find-large-value-jar-with-dependencies.jar 3 < test.txt
+# java -jar target/find-largest-value-jar-with-dependencies.jar $largest_value_count file_streaming_input
+java -jar target/find-largest-value-jar-with-dependencies.jar 3 </Users/chienchang.a.huang/test.txt
 ```
 - **Run application** - Read from file path
 
 ```
-# java -jar target/find-large-value-jar-with-dependencies.jar $largest_value_count absolute_file_path
-java -jar target/find-large-value-jar-with-dependencies.jar 3 test.txt
+# java -jar target/find-largest-value-jar-with-dependencies.jar $largest_value_count absolute_file_path
+java -jar target/find-largest-value-jar-with-dependencies.jar 3 /Users/chienchang.a.huang/test.txt
 ```
-## Performance test result:
+## Performance test result: 
+local pc spec as following,
+- cpu: 2.3 GHz Intel Core i5, 2 cores
+- memory: 16 GB 2133 MHz LPDDR3  
+- spark executor memory: 512 MB
+- spark driver memory: 512 MB  
 
+performance result in local test:
+1. 1000000 records, 12.695 MB, find the top 3 value  
+  -- total execution time: 5 seconds (5277 milliseconds) and used 2.1 GB memory
+2. 10000000 records, 126.95 MB, find the top 3 value  
+  -- total execution time: 8 seconds (8870 milliseconds) and used 2.1 GB memory
+3. 100000000 records, 1.269531 GB, find the top 3 value  
+  -- total execution time: 46 seconds (46366 milliseconds) and used 2.1 GB memory
+4. 1000000000 records, 12.69531 GB, find the top 3 value  
+  -- total execution time: 425.35200 seconds (425352 milliseconds) and used 2.1 GB memory  
+  
+** If ran in cluster, the performance will have significant improvement

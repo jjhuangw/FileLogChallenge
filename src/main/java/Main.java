@@ -13,7 +13,7 @@ public class Main {
 			// We can assign the different resource base on requirement and specification.
 			SparkSession sparkSession = SparkSession.builder().appName("Text File Data Load").master("local[*]")
 					.config("spark.driver.host", "127.0.0.1").config("spark.driver.bindAddress", "127.0.0.1")
-					.config("spark.executor.memory", "1g").config("spark.driver.memory", "1g").getOrCreate();
+					.config("spark.executor.memory", "512m").config("spark.driver.memory", "512m").getOrCreate();
 
 			InputExecutor executor = new InputExecutor(sparkSession);
 			List<String> records;
@@ -24,7 +24,7 @@ public class Main {
 			} else if(args.length == 1) {
 				records = executor.execute(limit, System.in);
 			}else {
-				 throw new Exception("Only allow at most 2 arguments");
+				 throw new Exception("Only allow at most 2 arguments, please check REAMME.");
 			}
 			
 			for (String record : records) {
@@ -32,9 +32,13 @@ public class Main {
 			}
 			
 		} catch(NumberFormatException ne) {
-			System.out.println("The first argument is the largest values count, it only accept numeric input.");
-		}catch (Exception e) {
+			System.out.println("");
+			System.err.println("The first argument is the largest values count, it only accept numeric input.");
+			System.out.println("");
+		} catch (Exception e) {
+			System.out.println("");
 			e.printStackTrace();
+			System.out.println("");
 			System.exit(1);
 		}
 	}
